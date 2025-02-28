@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require("express");
+const crypto = require("crypto");
 const { exec } = require("child_process");
 
 const app = express();
@@ -9,8 +10,8 @@ const SECRET = process.env.WEBHOOK_SECRET; // Mismo secret configurado en GitHub
 app.use(express.json());
 
 app.post("/webhook", (req, res) => {
-    
-    if (req.headers["x-hub-signature-256"] !== SECRET) {
+    const sig = `sha256=${crypto.createHmac("sha256", SECRET).update(JSON.stringify(req.body)).digest("hex")}`;
+    if (req.headers["x-hub-signature-256"] !== sig) {
         return res.status(401).send("Invalid signature");
     }
 
