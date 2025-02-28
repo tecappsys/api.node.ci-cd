@@ -36,6 +36,7 @@ deploy() {
 
     if [[ "$needs_build" == "true" ]]; then
         log "⚙️ Ejecutando build..."
+        ( sleep 60 && pkill -f "ng build" && abort "npm run build excedió el tiempo límite y fue detenido" ) &  # Si `ng build` dura más de 10 min, se mata el proceso
         npm run build 2>&1 | tee -a $LOG_FILE || abort "npm run build falló"
     fi
 
