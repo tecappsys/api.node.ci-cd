@@ -33,14 +33,42 @@ app.post("/webhook", (req, res) => {
     // Ejecutar el script de despliegue
     const deployCommand = `/var/www/tecappsys/api/node/api.node.ci-cd/deploy.sh ${repo}`;
 
-    exec(deployCommand, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`❌ Error ejecutando el script para ${repo}:`, stderr);
-            return res.status(500).send(stderr);
-        }
-        console.log(`✅ Despliegue exitoso para ${repo}:`, stdout);
-        res.send("Despliegue exitoso");
-    });
+    try {
+        exec(deployCommand, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`❌ Error ejecutando el script para ${repo}:`, stderr);
+                
+                // Intentar detener PM2 en caso de error
+                console.log("🛑 Deteniendo servicio ci-cd en PM2...");
+                exec("pm2 stop ci-cd", (pm2Error, pm2Stdout, pm2Stderr) => {
+                    if (pm2Error) {
+                        console.error("❌ Error al detener PM2:", pm2Stderr);
+                    } else {
+                        console.log("✅ Servicio ci-cd detenido en PM2:", pm2Stdout);
+                    }
+                });
+    
+                return res.status(500).send(stderr);
+            }
+    
+            console.log(`✅ Despliegue exitoso para ${repo}:`, stdout);
+            res.send("Despliegue exitoso");
+        });
+    } catch (err) {
+        console.error("❌ Error inesperado:", err);
+    
+        // Intentar detener PM2 en caso de error inesperado
+        console.log("🛑 Deteniendo servicio ci-cd en PM2...");
+        exec("pm2 stop ci-cd", (pm2Error, pm2Stdout, pm2Stderr) => {
+            if (pm2Error) {
+                console.error("❌ Error al detener PM2:", pm2Stderr);
+            } else {
+                console.log("✅ Servicio ci-cd detenido en PM2:", pm2Stdout);
+            }
+        });
+    
+        res.status(500).send("Error inesperado en el servidor.");
+    }
 });
 
 app.listen(PORT, () => console.log(`🚀 Webhook listener corriendo en puerto ${PORT}`));
