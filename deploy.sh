@@ -5,9 +5,39 @@ REPO=$1
 BASE_DIR="/var/www/tecappsys/portfolio"
 LOG_FILE="/var/www/tecappsys/api/node/api.node.ci-cd/deploy.log"
 
-# Función para escribir logs
+# Función para escribir logs con salto de línea
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a $LOG_FILE
+    echo -e "\n$(date '+%Y-%m-%d %H:%M:%S'): \n $1" | tee -a $LOG_FILE
+}
+
+# Función para manejar errores y abortar
+abort() {
+    log "❌ ERROR: $1"
+    log "🛑 Deteniendo servicio ci-cd en PM2..."
+    pm2 stop ci-cd 2>&1 | tee -a $LOG_FILE
+    exit 1
+}
+
+
+# Función para ejecutar el despliegue estándar (git pull, npm install, build)
+deploy() {
+    local dir=$1
+    local needs_build=$2
+    log "📂 Moviéndose a $dir"
+    cd "$dir" || abort "No se pudo acceder a $dir"
+
+    log "🔄 Ejecutando git pull..."
+    git pull origin main 2>&1 | tee -a $LOG_FILE || abort "git pull falló"
+
+    log "📦 Instalando dependencias..."
+    npm install 2>&1 | tee -a $LOG_FILE || abort "npm install falló"
+
+    if [[ "$needs_build" == "true" ]]; then
+        log "⚙️ Ejecutando build..."
+        npm run build 2>&1 | tee -a $LOG_FILE || abort "npm run build falló"
+    fi
+
+    log "✅ Despliegue exitoso para $REPO"
 }
 
 log "🔹 Recibida solicitud de despliegue para $REPO"
@@ -15,71 +45,24 @@ log "🔹 Recibida solicitud de despliegue para $REPO"
 # Lógica de despliegue según el repositorio
 case $REPO in
     "app.portal")
-        log "📂 Moviéndose a $BASE_DIR/home/app.portal"
-        cd "$BASE_DIR/home/app.portal" || exit
-
-        log "🔄 Ejecutando git pull..."
-        git pull origin main 2>&1 | tee -a $LOG_FILE
-
-        log "📦 Instalando dependencias..."
-        npm install 2>&1 | tee -a $LOG_FILE
-
-        log "⚙️ Ejecutando build..."
-        npm run build 2>&1 | tee -a $LOG_FILE
-
-        log "✅ Despliegue exitoso para $REPO"
+        deploy "$BASE_DIR/home/app.portal" true
         ;;
     
     "api.node.mongo")
-        log "📂 Moviéndose a /var/www/tecappsys/api.node.mongo"
-        cd "/var/www/tecappsys/api.node.mongo" || exit
-
-        log "🔄 Ejecutando git pull..."
-        git pull origin main 2>&1 | tee -a $LOG_FILE
-
-        log "📦 Instalando dependencias..."
-        npm install 2>&1 | tee -a $LOG_FILE
-
+        deploy "/var/www/tecappsys/api.node.mongo" false
         log "🚀 Reiniciando servicio con PM2..."
-        pm2 restart api 2>&1 | tee -a $LOG_FILE
-
-        log "✅ Despliegue exitoso para $REPO"
+        pm2 restart api 2>&1 | tee -a $LOG_FILE || abort "pm2 restart falló"
         ;;
-
+    
     "app.angular.resume")
-        log "📂 Moviéndose a $BASE_DIR/angular/resume"
-        cd "$BASE_DIR/angular/resume" || exit
-
-        log "🔄 Ejecutando git pull..."
-        git pull origin main 2>&1 | tee -a $LOG_FILE
-
-        log "📦 Instalando dependencias..."
-        npm install 2>&1 | tee -a $LOG_FILE
-
-        log "⚙️ Ejecutando build..."
-        npm run build 2>&1 | tee -a $LOG_FILE
-
-        log "✅ Despliegue exitoso para $REPO"
+        deploy "$BASE_DIR/angular/resume" true
         ;;
-
+    
     "app.react.portal")
-        log "📂 Moviéndose a $BASE_DIR/react/portal"
-        cd "$BASE_DIR/react/portal" || exit
-
-        log "🔄 Ejecutando git pull..."
-        git pull origin main 2>&1 | tee -a $LOG_FILE
-
-        log "📦 Instalando dependencias..."
-        npm install 2>&1 | tee -a $LOG_FILE
-
-        log "⚙️ Ejecutando build..."
-        npm run build 2>&1 | tee -a $LOG_FILE
-
-        log "✅ Despliegue exitoso para $REPO"
+        deploy "$BASE_DIR/react/portal" true
         ;;
     
     *)
-        log "❌ Repositorio no reconocido: $REPO"
-        exit 1
+        abort "Repositorio no reconocido: $REPO"
         ;;
 esac
