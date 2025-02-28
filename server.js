@@ -4,7 +4,7 @@ const { exec } = require("child_process");
 
 const app = express();
 const PORT = 9000;
-const SECRET = "5ZhiX{>x2T62"; // Mismo secret configurado en GitHub
+const SECRET = process.env.WEBHOOK_SECRET; // Mismo secret configurado en GitHub
 
 app.use(express.json());
 
