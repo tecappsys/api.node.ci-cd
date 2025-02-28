@@ -18,6 +18,8 @@ abort() {
     exit 1
 }
 
+# Habilitar detección de errores en tuberías (evita que errores silenciosos pasen desapercibidos)
+set -o pipefail
 
 # Función para ejecutar el despliegue estándar (git pull, npm install, build)
 deploy() {

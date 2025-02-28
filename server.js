@@ -44,3 +44,6 @@ app.post("/webhook", (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`🚀 Webhook listener corriendo en puerto ${PORT}`));
+
+//  tail -f /var/www/tecappsys/api/node/api.node.ci-cd/deploy.log
+//  chmod +x /var/www/tecappsys/api/node/api.node.ci-cd/deploy.sh
