@@ -29,16 +29,10 @@ deploy() {
     cd "$dir" || abort "No se pudo acceder a $dir"
 
     log "🔄 Ejecutando git pull..."
-    git pull origin main 2>&1 | tee -a $LOG_FILE || abort "git pull falló"
+    git pull origin 2>&1 | tee -a $LOG_FILE || abort "git pull falló"
 
     log "📦 Instalando dependencias..."
     npm install 2>&1 | tee -a $LOG_FILE || abort "npm install falló"
-
-    if [[ "$needs_build" == "true" ]]; then
-        log "⚙️ Ejecutando build..."
-        ( sleep 60 && pkill -f "ng build" && abort "npm run build excedió el tiempo límite y fue detenido" ) &  # Si `ng build` dura más de 10 min, se mata el proceso
-        npm run build 2>&1 | tee -a $LOG_FILE || abort "npm run build falló"
-    fi
 
     log "✅ Despliegue exitoso para $REPO"
 }
