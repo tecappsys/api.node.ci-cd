@@ -52,7 +52,7 @@ case $REPO in
         ;;
 
     "app.angular.portal")
-        deploy "$BASE_DIR/angular/portal" true
+        deploy "$BASE_DIR/angular/portal/app.angular.portal" true
         ;;
     
     "app.angular.resume")
