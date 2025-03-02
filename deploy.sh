@@ -50,6 +50,10 @@ case $REPO in
         log "🚀 Reiniciando servicio con PM2..."
         pm2 restart api 2>&1 | tee -a $LOG_FILE || abort "pm2 restart falló"
         ;;
+
+    "app.angular.portal")
+        deploy "$BASE_DIR/angular/portal" true
+        ;;
     
     "app.angular.resume")
         deploy "$BASE_DIR/angular/resume" true
