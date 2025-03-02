@@ -29,7 +29,7 @@ deploy() {
     cd "$dir" || abort "No se pudo acceder a $dir"
 
     log "🔄 Ejecutando git pull..."
-    git pull origin 2>&1 | tee -a $LOG_FILE || abort "git pull falló"
+    git pull 2>&1 | tee -a $LOG_FILE || abort "git pull falló"
 
     log "📦 Instalando dependencias..."
     npm install 2>&1 | tee -a $LOG_FILE || abort "npm install falló"

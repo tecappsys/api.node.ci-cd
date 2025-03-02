@@ -28,8 +28,6 @@ app.post("/webhook", (req, res) => {
     if (!repo) {
         console.log("⚠️ Repositorio no encontrado en la solicitud.");
         return res.status(400).send("Repositorio no encontrado.");
-    }else{
-        res.send(`${repo} en proceso de despliegue`);
     }
 
     // Ejecutar el script de despliegue
@@ -42,7 +40,7 @@ app.post("/webhook", (req, res) => {
                 return res.status(500).send(stderr);
             }    
             console.log(`✅ Despliegue exitoso para ${repo}:`, stdout);
-            res.send("Despliegue exitoso");
+            res.send(`${repo} Despliegue exitoso`);
         });
     } catch (err) {
         console.log("❌ Error inesperado:", err); 
