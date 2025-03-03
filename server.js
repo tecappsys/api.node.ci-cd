@@ -5,33 +5,34 @@ const { exec } = require("child_process");
 
 const app = express();
 const PORT = 9000;
-const SECRET = process.env.WEBHOOK_SECRET;
+const GIT_HOOK_SECRET = process.env.GIT_HOOK_SECRET;
+const reposPath = process.env.REPOS
 
-if (!SECRET) {
-    console.log("❌ ERROR: WEBHOOK_SECRET no está definido. Verifica el archivo .env.");
-    process.exit(1);
+const validateRepository = (req) =>{
+    const repo = req.body.repository.name ? req.body.repository.name : null; 
+    if (!repo) {
+        console.log("⚠️ Repositorio no encontrado en la solicitud.");        
+    }
+    return repo;
+}
+
+const validateSignature = (req,repo) => {
+    console.log("⏳ Validando Git Hook signature ");   
+    const sig = `sha256=${crypto.createHmac("sha256", GIT_HOOK_SECRET).update(JSON.stringify(req.body)).digest("hex")}`;
+    let validateSignature = (req.headers["x-hub-signature-256"] !== sig)
+    (!validateSignature) ? console.log(`❌ Invalid signature github hook ${repo}`) :console.log(`✅ Valid signature github hook ${repo}`);
+    return validateSignature
 }
 
 app.use(express.json());
 
 app.post("/webhook", (req, res) => {
-    console.log("🔹 Solicitud de Webhook recibida.");
-
-    const sig = `sha256=${crypto.createHmac("sha256", SECRET).update(JSON.stringify(req.body)).digest("hex")}`;
-    if (req.headers["x-hub-signature-256"] !== sig) {
-        return res.status(401).send("Invalid signature");
-    }
-
-    const repo = req.body.repository.name;
-    console.log(`📢 Webhook activado para ${repo}`);
-
-    if (!repo) {
-        console.log("⚠️ Repositorio no encontrado en la solicitud.");
-        return res.status(400).send("Repositorio no encontrado.");
-    }
+    const repo = validateRepository(req);
+    !repo && res.status(400).send("Repositorio no encontrado.");
+    !validateSignature(req,repo) && res.status(401).send("Invalid signature");
 
     // Ejecutar el script de despliegue
-    const deployCommand = `/var/www/tecappsys/api/node/api.node.ci-cd/deploy.sh ${repo}`;
+    const deployCommand = `./scripts/repoToWebSite.sh ${repo} ${process.env[repo.toUpperCase()]} ${reposPath+repo} ${process.env.LOG_FILE}`;
 
     try {
         exec(deployCommand, (error, stdout, stderr) => {
