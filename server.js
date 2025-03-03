@@ -8,28 +8,23 @@ const PORT = 9000;
 const GIT_HOOK_SECRET = process.env.GIT_HOOK_SECRET;
 const reposPath = process.env.REPOS
 
-const validateRepository = (req) =>{
-    const repo = req.body.repository.name ? req.body.repository.name : null; 
-    if (!repo) {
-        console.log("⚠️ Repositorio no encontrado en la solicitud.");        
-    }
-    return repo;
-}
-
-const validateSignature = (req,repo) => {
-    console.log("⏳ Validando Git Hook signature ");   
-    const sig = `sha256=${crypto.createHmac("sha256", GIT_HOOK_SECRET).update(JSON.stringify(req.body)).digest("hex")}`;
-    let validateSignature = (req.headers["x-hub-signature-256"] !== sig)
-    (!validateSignature) ? console.log(`❌ Invalid signature github hook ${repo}`) :console.log(`✅ Valid signature github hook ${repo}`);
-    return validateSignature
-}
-
 app.use(express.json());
 
 app.post("/webhook", (req, res) => {
-    const repo = validateRepository(req);
-    !repo && res.status(400).send("Repositorio no encontrado.");
-    !validateSignature(req,repo) && res.status(401).send("Invalid signature");
+    const repo = req.body.repository.name ? req.body.repository.name : null; 
+    if (!repo) {
+        console.log("⚠️ Repositorio no encontrado en la solicitud.");     
+        res.status(400).send("Repositorio no encontrado.")   
+    }
+
+    console.log("⏳ Validando Git Hook signature ");   
+    const sig = `sha256=${crypto.createHmac("sha256", GIT_HOOK_SECRET).update(JSON.stringify(req.body)).digest("hex")}`;
+    if((req.headers["x-hub-signature-256"] !== sig)){
+        console.log(`❌ Invalid signature github hook ${repo}`);
+        res.status(401).send("Invalid signature");
+    }else{
+        console.log(`✅ Valid signature github hook ${repo}`);
+    }
 
     // Ejecutar el script de despliegue
     const deployCommand = `./scripts/repoToWebSite.sh ${repo} ${process.env[repo.toUpperCase()]} ${reposPath+repo} ${process.env.LOG_FILE}`;
