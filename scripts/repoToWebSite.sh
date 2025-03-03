@@ -47,7 +47,7 @@ if [[ -d "$COPY_PATH" ]]; then
     rm -rf "${COPY_PATH:?}"/*  # Precaución con rutas vacías
     log "✅ Archivos eliminados en $COPY_PATH"
 
-    log "⏳ Copiando archivos de $REPO_PATH/dist* a $COPY_PATH"
+    log "⏳ Copiando archivos de $REPO_PATH/dist/* a $COPY_PATH"
     if cp -r "$REPO_PATH"/dist/* "$COPY_PATH"; then
         log "✅ Archivos copiados exitosamente a $COPY_PATH"
     else
