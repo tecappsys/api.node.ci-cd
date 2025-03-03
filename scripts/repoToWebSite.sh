@@ -16,7 +16,7 @@ log() {
 
 # Validación inicial
 if [[ -z "$REPO" || -z "$COPY_PATH" || -z "$REPO_PATH" ]]; then
-    log "❌ Parámetros insuficientes. Uso: ./deploy.sh <REPO> <COPY_PATH> <REPO_PATH> <LOG_FILE>"
+    log "🚫 Parámetros insuficientes. Uso: ./deploy.sh <REPO> <COPY_PATH> <REPO_PATH> <LOG_FILE>"
     exit 1
 fi
 
@@ -33,7 +33,7 @@ if [[ -d "$REPO_PATH" ]]; then
     if git pull 2>&1 | tee -a "$LOG_FILE"; then
         log "✅ Repositorio actualizado correctamente."
     else
-        log "❌ Error al actualizar el repositorio."
+        log "🚫 Error al actualizar el repositorio."
         exit 1
     fi
 else
@@ -43,22 +43,20 @@ fi
 
 # Verificar si el directorio destino existe
 if [[ -d "$COPY_PATH" ]]; then
-    log "⏳ Borrando los archivos en $COPY_PATH..."
+    log "⏳ Borrando los archivos en $COPY_PATH"
     rm -rf "${COPY_PATH:?}"/*  # Precaución con rutas vacías
-    log "✅ Archivos eliminados en $COPY_PATH."
+    log "✅ Archivos eliminados en $COPY_PATH"
 
-    log "⏳ Copiando archivos de $REPO_PATH a $COPY_PATH..."
+    log "⏳ Copiando archivos de $REPO_PATH/dist* a $COPY_PATH"
     if cp -r "$REPO_PATH"/dist/* "$COPY_PATH"; then
-        log "✅ Archivos copiados exitosamente a $COPY_PATH."
+        log "✅ Archivos copiados exitosamente a $COPY_PATH"
     else
-        log "❌ Error al copiar los archivos al directorio destino."
+        log "🚫 Error al copiar los archivos al directorio destino $COPY_PATH"
         exit 1
     fi
 else
-    log "⚠️ El directorio destino $COPY_PATH no existe."
+    log "⚠️ El directorio destino $COPY_PATH no existe"
     exit 1
 fi
 
-# Finalización
-log "🚀 Despliegue completado para el repositorio: $REPO"
 exit
