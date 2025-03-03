@@ -27,7 +27,7 @@ app.post("/webhook", (req, res) => {
     }
 
     // Ejecutar el script de despliegue
-    const deployCommand = `./scripts/repoToWebSite.sh ${repo} ${process.env[repo.toUpperCase()]} ${reposPath+repo} ${process.env.LOG_FILE}`;
+    const deployCommand = `./scripts/repoToWebSite.sh ${repo} ${process.env[repo]} ${reposPath+repo} ${process.env.LOG_FILE}`;
 
     try {
         exec(deployCommand, (error, stdout, stderr) => {
