@@ -17,6 +17,8 @@ app.post("/webhook", (req, res) => {
         res.status(400).send("Repositorio no encontrado.")   
     }
 
+    console.log(`📂 Repositorio: ${repo}`); 
+
     console.log("⏳ Validando Git Hook signature ");   
     const sig = `sha256=${crypto.createHmac("sha256", GIT_HOOK_SECRET).update(JSON.stringify(req.body)).digest("hex")}`;
     if((req.headers["x-hub-signature-256"] !== sig)){
