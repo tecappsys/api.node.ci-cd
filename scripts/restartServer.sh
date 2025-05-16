@@ -1,48 +1,75 @@
 #!/bin/bash
 
-# Variables
-REPO=$1
-COPY_DIR=$2
-LOG_FILE="/var/www/tecappsys/api/node/api.node.ci-cd/deploy.log"
+# Habilitar modo estricto para manejar errores
+set -euo pipefail
 
-# Función para escribir logs con salto de línea
+# Variables recibidas como argumentos
+REPO=${1:-}
+REPO_PATH=${2:-}
+LOG_FILE=${3:-}
+
+# Función para escribir logs con timestamp
 log() {
-    echo -e "\n$(date '+%Y-%m-%d %H:%M:%S'): \n $1" | tee -a $LOG_FILE
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S') | $1" | tee -a "$LOG_FILE"
 }
 
-# Habilitar detección de errores en tuberías (evita que errores silenciosos pasen desapercibidos)
-set -o pipefail
+# Validación inicial
+if [[ -z "$REPO" || -z "$REPO_PATH" ]]; then
+    log "🚫 Parámetros insuficientes. Uso: ./deploy.sh <REPO> <REPO_PATH> <LOG_FILE>"
+    exit 1
+fi
 
-# Función para ejecutar el despliegue estándar (git pull, npm install, build)
-deploy() {
-    local dir=$1
-    local needs_build=$2
-    log "📂 Moviéndose a $dir"
-    cd "$dir"
+# Iniciar despliegue
+log "📢 Iniciando despliegue para el repositorio: $REPO"
 
-    log "🔄 Ejecutando git pull..."
-    git pull 2>&1 | tee -a $LOG_FILE
+# Verificar si el directorio del repositorio existe
+if [[ -d "$REPO_PATH" ]]; then
+    log "📂 Moviéndose al directorio del repositorio: $REPO_PATH"
+    cd "$REPO_PATH"
+
+    log "🗑️ Borrando /dist"
+    if rm -rf "${REPO_PATH:?}"/dist 2>&1 | tee -a "$LOG_FILE"; then
+        log "✅ /dist borrado correctamente."
+    else
+        log "🚫 Error al borrar /dist"
+        exit 1
+    fi
+
+    log "🔄 Ejecutando 'git pull'..."
+    if git pull 2>&1 | tee -a "$LOG_FILE"; then
+        log "✅ Repositorio actualizado correctamente."
+    else
+        log "🚫 Error al actualizar el repositorio."
+        exit 1
+    fi
 
     log "📦 Instalando dependencias..."
-    npm install 2>&1 | tee -a $LOG_FILE
+    if npm install 2>&1 | tee -a "$LOG_FILE"; then
+        log "✅ Dependencias instalandas correctamente."
+    else
+        log "🚫 Error al instalar dependencias."
+        exit 1
+    fi
 
-    log "✅ Despliegue exitoso para $REPO"
-}
+    log "🛠️ Build del repo..."
+    if npm run build 2>&1 | tee -a "$LOG_FILE"; then
+        log "✅ Build completado correctamente."
+    else
+        log "🚫 Error en el build."
+        exit 1
+    fi
 
-log "🔹 Recibida solicitud de despliegue para $REPO"
+    log "🚀 Reiniciando servicio con PM2..."
+    if pm2 restart node-main | tee -a "$LOG_FILE"; then
+        log "✅ Node-Main reiniciado correctamente."
+    else
+        log "🚫 Error al reiniciado Node-Main."
+        exit 1
+    fi
 
-# Lógica de despliegue según el repositorio
-case $REPO in
-    "app.portal")
-        deploy "$BASE_DIR/home/app.portal" true
-        ;;
-    
-    "api.node.mongo")
-        deploy "/var/www/tecappsys/api.node.mongo" false
-        log "🚀 Reiniciando servicio con PM2..."
-        pm2 restart api 2>&1 | tee -a $LOG_FILE || abort "pm2 restart falló"
-        ;;    
-    *)
-        abort "Repositorio no reconocido: $REPO"
-        ;;
-esac
+else
+    log "⚠️ El directorio del repositorio $REPO_PATH no existe."
+    exit 1
+fi
+
+exit
