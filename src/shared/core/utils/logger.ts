@@ -1,5 +1,4 @@
 import winston from "winston";
-import path from "path";
 import { GenericLog } from "../interface/generic-log.interface";
 
 // Configuración de formatos de logs
