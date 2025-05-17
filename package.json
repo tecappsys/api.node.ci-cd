@@ -1,6 +1,6 @@
 {
-  "name": "api-node-main",
-  "version": "0.1.0",
+  "name": "api-node-ci-cd",
+  "version": "0.1.1",
   "description": "",
   "main": "index.js",
   "scripts": {
