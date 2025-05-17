@@ -4,7 +4,7 @@ import cors from 'cors';
 import { errorHandler } from '../middlewares/core/errorHandler';
 
 import APP_ANGULAR_SPOTIFY_ROUTES  from '../routes/app-angular-spotify/routes';
-import GIT_HOOK_CI_CD_ROUTES from '../routes/git-hook-ci-cd/routes';
+import GIT_HOOK_CI_CD_ROUTES from '../routes/git-hook/routes';
 
 class expressConfig{
     constructor(server:Application){
