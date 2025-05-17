@@ -42,7 +42,7 @@ export const deployRepository = async (repo: string): Promise<string> => {
 /**
  * Ejecuta el script de despliegue del repositorio Node Main
  */
-export const deployNodeMain = async (repo: string): Promise<string> => {
+export const deployMain = async (repo: string): Promise<string> => {
     const deployCommand = `${REPO_SCRIPTS_PATH}restartServer.sh ${repo} ${process.env[repo]} ${process.env.NODE_LOG_FILE}`;
 
     try {

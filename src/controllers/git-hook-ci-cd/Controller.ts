@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../../middlewares/core/asyncHandler";
 import { log } from "../../shared/core/utils/logger";
 import { badRequestResponse, successResponse } from "../../shared/core/utils/aux-response";
-import { deployLibAngular, deployNodeMain, deployRepository } from "../../services/git-hook-ci-cd/git.service";
+import { deployLibAngular, deployMain, deployRepository } from "../../services/git-hook-ci-cd/git.service";
 
 export const UpdateRepos = asyncHandler(async (req: Request, res: Response) => {
     const repo = req.body.repository?.name;
@@ -17,7 +17,7 @@ export const UpdateRepos = asyncHandler(async (req: Request, res: Response) => {
     return successResponse(res, `Despliegue exitoso para ${repo}`, { output });
 });
 
-export const UpdateNodeMain = asyncHandler(async (req: Request, res: Response) => {
+export const UpdateMain = asyncHandler(async (req: Request, res: Response) => {
     const repo = req.body.repository?.name;
     if (!repo) {
         log.warn({title:'GIT_HOOK_CI_CD_CONTROLLER_UPDATE_NODE_MAIN',description:"Repositorio no encontrado en la solicitud."});
@@ -26,7 +26,7 @@ export const UpdateNodeMain = asyncHandler(async (req: Request, res: Response) =
 
     log.info({title:'GIT_HOOK_CI_CD_CONTROLLER_UPDATE_NODE_MAIN',description:`Webhook recibido para el repositorio: ${repo}`});
 
-    const output = await deployNodeMain(repo);
+    const output = await deployMain(repo);
     return successResponse(res, `Despliegue exitoso para ${repo}`, { output });
 });
 
