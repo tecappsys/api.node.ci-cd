@@ -18,8 +18,6 @@ export const verifySignature = (body: any, signature: string | undefined): boole
         .createHmac("sha256", GIT_HOOK_SECRET)
         .update(JSON.stringify(body))
         .digest("hex")}`;
-    log.warn({title:'computedSig',description:`${computedSig}`});
-    log.warn({title:'signature',description:`${signature}`});
     return signature === computedSig;
 };
 
